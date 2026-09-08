@@ -510,7 +510,7 @@ textarea{resize:vertical;min-height:70px}
       <div class="gracias" id="gracias">
         <strong id="graciasT">¡Gracias!</strong>
         <em id="graciasS">Tu confirmación quedó registrada.</em>
-        <em style="color:var(--terra);margin-top:12px">Estamos terminando de conectar el registro de confirmaciones. Por ahora, confírmanos también por WhatsApp.</em>
+        <em id="graciasNota" style="color:var(--terra);margin-top:12px"></em>
       </div>
     </div>
   </section>
@@ -717,16 +717,49 @@ textarea{resize:vertical;min-height:70px}
     respuesta = "no"; bNo.setAttribute("aria-pressed","true"); bSi.setAttribute("aria-pressed","false");
     wrapN.style.display = "none";
   });
+  var RSVP = "https://script.google.com/macros/s/AKfycbyr8YS_GziaU47XRfr8ouJm9s1ZCFIiJwXRgsh48d9XM9MfVt1ES9CmQgCmzzUy5alU/exec", CLAVE = "ei26-wjxbucaxlu", WA = "https://wa.me/593963551651?text=Hola%20Isra%20y%20Emi%2C%20les%20escribo%20para%20confirmar%20mi%20asistencia%20a%20la%20boda.";
   document.getElementById("form").addEventListener("submit", function(e){
     e.preventDefault();
     if(!respuesta){ bSi.focus(); return; }
-    var g = document.getElementById("gracias"), s = document.getElementById("graciasS");
-    s.textContent = respuesta === "si"
-      ? "Anotamos " + (personalizado && invitado.n > 1 ? selN.value : "1") + " para el sábado 14 de noviembre. Nos vemos en la Quinta El Guabo."
-      : "Gracias por avisarnos. Te vamos a extrañar ese día.";
-    this.style.display = "none";
-    g.classList.add("visible");
-    g.scrollIntoView({behavior: suave ? "smooth" : "auto", block:"center"});
+    var form = this, btn = form.querySelector('button[type="submit"]'),
+        g = document.getElementById("gracias"),
+        s = document.getElementById("graciasS"),
+        nota = document.getElementById("graciasNota"),
+        cuantos = respuesta === "si" ? (personalizado && invitado.n > 1 ? selN.value : 1) : 0;
+
+    function mostrar(estado){
+      s.textContent = respuesta === "si"
+        ? "Anotamos " + cuantos + " para el sábado 14 de noviembre. Nos vemos en la Quinta El Guabo."
+        : "Gracias por avisarnos. Te vamos a extrañar ese día.";
+      if(estado === "ok"){
+        nota.style.display = "none";
+      } else {
+        nota.style.display = "";
+        var wa = (WA.slice(0,4) === "http")
+          ? ' <a href="' + WA + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">Escríbenos por WhatsApp</a>.'
+          : '';
+        nota.innerHTML = (estado === "error"
+          ? "No pudimos registrar tu respuesta automáticamente." 
+          : "Estamos terminando de conectar el registro de confirmaciones.") + wa;
+      }
+      form.style.display = "none";
+      g.classList.add("visible");
+      g.scrollIntoView({behavior: suave ? "smooth" : "auto", block:"center"});
+    }
+
+    if(RSVP.slice(0,4) !== "http"){ mostrar("pendiente"); return; }
+    btn.disabled = true; btn.textContent = "Enviando…";
+    fetch(RSVP, { method:"POST",
+                  headers:{"Content-Type":"text/plain;charset=utf-8"},
+                  body: JSON.stringify({ clave: CLAVE,
+                                         nombre: personalizado ? invitado.nombre : "",
+                                         pases: invitado.n,
+                                         asiste: respuesta,
+                                         cuantos: cuantos,
+                                         mensaje: document.getElementById("msg").value }) })
+      .then(function(r){ return r.json(); })
+      .then(function(j){ mostrar(j && j.ok ? "ok" : "error"); })
+      .catch(function(){ mostrar("error"); });
   });
 })();
 </script>
