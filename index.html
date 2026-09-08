@@ -811,40 +811,66 @@ textarea{resize:vertical;min-height:70px}
         nota = document.getElementById("graciasNota"),
         cuantos = respuesta === "si" ? (personalizado && invitado.n > 1 ? selN.value : 1) : 0;
 
-    function mostrar(estado){
+    /* La respuesta se muestra AL INSTANTE y el registro viaja en segundo plano.
+       El Web App de Google tarda entre 2 y 8 segundos (mas si estaba dormido), y no
+       tiene sentido dejar al invitado mirando "Enviando..." mientras Google despierta.
+       Si el envio falla, se reintenta solo y solo entonces aparece el aviso. */
+    function mostrar(){
       s.textContent = respuesta === "si"
         ? "Confirmamos " + cuantos + (Number(cuantos) === 1 ? " persona" : " personas")
           + " para el sábado 14 de noviembre. Nos vemos en la Quinta El Guabo."
         : "Gracias por avisarnos. Te vamos a extrañar ese día.";
-      if(estado === "ok"){
-        nota.style.display = "none";
-      } else {
-        nota.style.display = "";
-        var wa = (WA.slice(0,4) === "http")
-          ? ' <a href="' + WA + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">Escríbenos por WhatsApp</a>.'
-          : '';
-        nota.innerHTML = (estado === "error"
-          ? "No pudimos registrar tu respuesta automáticamente." 
-          : "Estamos terminando de conectar el registro de confirmaciones.") + wa;
-      }
+      nota.style.display = "none";
       form.style.display = "none";
       g.classList.add("visible");
       g.scrollIntoView({behavior: suave ? "smooth" : "auto", block:"center"});
     }
 
-    if(RSVP.slice(0,4) !== "http"){ mostrar("pendiente"); return; }
-    btn.disabled = true; btn.textContent = "Enviando…";
-    fetch(RSVP, { method:"POST",
-                  headers:{"Content-Type":"text/plain;charset=utf-8"},
-                  body: JSON.stringify({ clave: CLAVE,
-                                         nombre: personalizado ? invitado.nombre : "",
-                                         pases: invitado.n,
-                                         asiste: respuesta,
-                                         cuantos: cuantos,
-                                         mensaje: document.getElementById("msg").value }) })
-      .then(function(r){ return r.json(); })
-      .then(function(j){ mostrar(j && j.ok ? "ok" : "error"); })
-      .catch(function(){ mostrar("error"); });
+    function avisar(estado){
+      if(estado === "ok"){ nota.style.display = "none"; return; }
+      nota.style.display = "";
+      var wa = (WA.slice(0,4) === "http")
+        ? ' <a href="' + WA + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">Escríbenos por WhatsApp</a>.'
+        : '';
+      nota.innerHTML = (estado === "error"
+        ? "No pudimos registrar tu respuesta automáticamente."
+        : "Estamos terminando de conectar el registro de confirmaciones.") + wa;
+    }
+
+    btn.disabled = true;
+    mostrar();
+    if(RSVP.slice(0,4) !== "http"){ avisar("pendiente"); return; }
+
+    var carga = JSON.stringify({ clave: CLAVE,
+                                 nombre: personalizado ? invitado.nombre : "",
+                                 pases: invitado.n,
+                                 asiste: respuesta,
+                                 cuantos: cuantos,
+                                 mensaje: document.getElementById("msg").value });
+
+    function enviar(intento){
+      var ctrl = ("AbortController" in window) ? new AbortController() : null;
+      var corte = setTimeout(function(){ if(ctrl) ctrl.abort(); }, 20000);
+      var opciones = { method:"POST",
+                       headers:{"Content-Type":"text/plain;charset=utf-8"},
+                       body: carga,
+                       keepalive: true };
+      if(ctrl) opciones.signal = ctrl.signal;
+
+      function fallo(){
+        clearTimeout(corte);
+        if(intento < 3) setTimeout(function(){ enviar(intento + 1); }, 2000 * intento);
+        else avisar("error");
+      }
+      fetch(RSVP, opciones)
+        .then(function(r){ return r.json(); })
+        .then(function(j){
+          clearTimeout(corte);
+          if(j && j.ok) avisar("ok"); else fallo();
+        })
+        .catch(fallo);
+    }
+    enviar(1);
   });
 })();
 </script>
