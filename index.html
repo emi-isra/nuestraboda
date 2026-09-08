@@ -655,9 +655,15 @@ textarea{resize:vertical;min-height:70px}
     if(!m) return { nombre: t, n: null };
     return { nombre: t.slice(0, m.index).replace(/[?&\s]+$/,""), n: parseInt(m[1],10) };
   }
-  function desdeCodigo(c){
+  /* El link viejo en base64 era demasiado fragil: un punto, una coma o un cambio de
+     mayusculas al final y ya no se podia leer, asi que la invitacion salia SIN nombre.
+     Ahora el nombre viaja legible y el numero de pases va detras de un "_".
+     Regla de oro: si algo del numero no se entiende, el NOMBRE se muestra igual;
+     lo unico que cae por defecto es el numero de pases (que en 87 de 96 casos es 1). */
+  function base64Vieja(c){
+    if(!/^[A-Za-z0-9\-_]{8,}$/.test(c)) return null;
     try{
-      var b = String(c).replace(/-/g,"+").replace(/_/g,"/");
+      var b = c.replace(/-/g,"+").replace(/_/g,"/");
       while(b.length % 4) b += "=";
       var txt = decodeURIComponent(escape(atob(b)));
       var i = txt.lastIndexOf("~");
@@ -667,10 +673,21 @@ textarea{resize:vertical;min-height:70px}
       return { nombre: txt.slice(0,i), n: n };
     } catch(e){ return null; }
   }
+  function desdeUno(v){
+    /* primero se quita la basura del final: un punto o una coma pegados al link
+       arruinaban el codigo antiguo y la invitacion salia sin nombre */
+    var t = normaliza(v).replace(/[\s.,;:!?)\]}"'«»…]+$/,"");
+    var vieja = base64Vieja(t);
+    if(vieja) return vieja;
+    var m = t.match(/^(.+?)\s*[_~|]\s*(\d{1,2})$/);
+    if(m) return { nombre: m[1].trim(), n: parseInt(m[2],10) };
+    var p = limpiaPases(t);                 /* "Nombrepases=1" pegado */
+    return { nombre: p.nombre, n: p.n };    /* sin numero legible -> el nombre igual sale */
+  }
   function tope(n){ return Math.max(1, Math.min(12, parseInt(n,10) || 1)); }
 
   var q = new URLSearchParams(location.search);
-  var datos = q.get("i") ? desdeCodigo(q.get("i")) : null;
+  var datos = q.get("i") ? desdeUno(q.get("i")) : null;
   if(datos){
     invitado.nombre = normaliza(datos.nombre);
     invitado.n = tope(datos.n);
