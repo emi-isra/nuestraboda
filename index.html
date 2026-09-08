@@ -638,9 +638,49 @@ textarea{resize:vertical;min-height:70px}
     }
     gT.textContent = personalizado ? "¡Gracias, " + pila() + "!" : "¡Gracias!";
   }
+  /* ---------- de donde sale el nombre ----------
+     El link nuevo lleva un solo dato (?i=...), sin & y sin %, porque el & se pierde
+     con facilidad: Excel en Mac y algunos clientes de correo cortan la direccion ahi,
+     y entonces el "pases=1" terminaba pegado al nombre del invitado.
+     Se siguen aceptando los links viejos (?to=...&pases=...) y, por si acaso, se limpia
+     el nombre de cualquier "pases=N" que haya quedado pegado. */
+  function normaliza(t){
+    t = String(t).replace(/\s+/g, " ").trim();
+    if(t.normalize) t = t.normalize("NFC");          /* acentos sueltos -> acentos normales */
+    return t.slice(0,80);
+  }
+  function limpiaPases(t){
+    /* si el & se perdio, el nombre llega como "Marieta Ramirezpases=1" */
+    var m = t.match(/[?&]?\s*pases\s*=\s*(\d{1,2})\s*$/i);
+    if(!m) return { nombre: t, n: null };
+    return { nombre: t.slice(0, m.index).replace(/[?&\s]+$/,""), n: parseInt(m[1],10) };
+  }
+  function desdeCodigo(c){
+    try{
+      var b = String(c).replace(/-/g,"+").replace(/_/g,"/");
+      while(b.length % 4) b += "=";
+      var txt = decodeURIComponent(escape(atob(b)));
+      var i = txt.lastIndexOf("~");
+      if(i < 1) return null;
+      var n = parseInt(txt.slice(i+1), 10);
+      if(!n) return null;
+      return { nombre: txt.slice(0,i), n: n };
+    } catch(e){ return null; }
+  }
+  function tope(n){ return Math.max(1, Math.min(12, parseInt(n,10) || 1)); }
+
   var q = new URLSearchParams(location.search);
-  if(q.get("to")){ invitado.nombre = q.get("to").slice(0,80); personalizado = true; }
-  if(q.get("pases")) invitado.n = Math.max(1, Math.min(12, parseInt(q.get("pases"),10) || 1));
+  var datos = q.get("i") ? desdeCodigo(q.get("i")) : null;
+  if(datos){
+    invitado.nombre = normaliza(datos.nombre);
+    invitado.n = tope(datos.n);
+    personalizado = !!invitado.nombre;
+  } else if(q.get("to")){
+    var crudo = limpiaPases(normaliza(q.get("to")));
+    invitado.nombre = crudo.nombre;
+    invitado.n = tope(q.get("pases") || crudo.n);
+    personalizado = !!invitado.nombre;
+  }
   pintar();
 
   /* ---------- abrir el sobre ---------- */
