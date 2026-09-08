@@ -558,7 +558,22 @@ textarea{resize:vertical;min-height:70px}
       respuesta = null;
   var invitado = { nombre:"", n:1 }, personalizado = false;
 
-  function pila(){ return invitado.nombre.split(/ y | & /)[0].split(" ")[0]; }
+  /* nombre de pila, respetando los compuestos comunes (Ana Paula, Maria Jose...) */
+  var COMPUESTOS = "maria jose juan ana luis jesus miguel carlos francisco luz rosa marco pedro victor".split(" ");
+  function sinTildes(t){ return t.normalize ? t.normalize("NFD").replace(/[\u0300-\u036f]/g,"") : t; }
+  function pila(nom){
+    var n = (nom === undefined ? invitado.nombre : nom).replace(/\s+/g," ").trim();
+    if(/^familia\b/i.test(n)) return n;
+    var c = n.search(/ & | y /);
+    if(c > 0){
+      var sep = n.slice(c).match(/^ & | y /)[0];
+      return pila(n.slice(0,c)) + " y " + pila(n.slice(c + sep.length));
+    }
+    var t = n.split(" ");
+    if(t.length >= 3 && COMPUESTOS.indexOf(sinTildes(t[0]).toLowerCase()) >= 0)
+      return t[0] + " " + t[1];
+    return t[0];
+  }
   function pintar(){
     var sobrePara = document.querySelector(".sob-para"),
         saludoOjo = saludo.parentNode.querySelector(".eyebrow");
@@ -729,7 +744,7 @@ textarea{resize:vertical;min-height:70px}
 
     function mostrar(estado){
       s.textContent = respuesta === "si"
-        ? "Anotamos " + cuantos + " para el sábado 14 de noviembre. Nos vemos en la Quinta El Guabo."
+        ? "Confirmamos " + cuantos + " para el sábado 14 de noviembre. Nos vemos en la Quinta El Guabo."
         : "Gracias por avisarnos. Te vamos a extrañar ese día.";
       if(estado === "ok"){
         nota.style.display = "none";
