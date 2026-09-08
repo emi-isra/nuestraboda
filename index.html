@@ -844,16 +844,27 @@ textarea{resize:vertical;min-height:70px}
     mostrar();
     if(RSVP.slice(0,4) !== "http"){ avisar("pendiente"); return; }
 
-    var carga = JSON.stringify({ clave: CLAVE,
+    var idEnvio = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,8);
+    var carga = JSON.stringify({ id: idEnvio,
+                                 clave: CLAVE,
                                  nombre: personalizado ? invitado.nombre : "",
                                  pases: invitado.n,
                                  asiste: respuesta,
                                  cuantos: cuantos,
                                  mensaje: document.getElementById("msg").value });
 
+    /* Google atiende las confirmaciones de a una: si varios invitados confirman en el
+       mismo momento se hace cola. Medido contra el script real, 12 a la vez tardan hasta
+       39 s en pasar todas. Por eso cada intento aguanta hasta 60 s antes de rendirse
+       (cortar antes seria abandonar una peticion que solo estaba en la cola, y encima
+       podria dejar la fila escrita dos veces), y los reintentos se separan cada vez mas,
+       con algo de azar para que los que chocaron no vuelvan a chocar juntos.
+       El invitado no ve nada de esto: su agradecimiento ya esta en pantalla. */
+    var ESPERAS = [3000, 10000, 25000, 55000];   /* 5 intentos, unos 95 s de ventana */
+
     function enviar(intento){
       var ctrl = ("AbortController" in window) ? new AbortController() : null;
-      var corte = setTimeout(function(){ if(ctrl) ctrl.abort(); }, 20000);
+      var corte = setTimeout(function(){ if(ctrl) ctrl.abort(); }, 60000);
       var opciones = { method:"POST",
                        headers:{"Content-Type":"text/plain;charset=utf-8"},
                        body: carga,
@@ -862,7 +873,9 @@ textarea{resize:vertical;min-height:70px}
 
       function fallo(){
         clearTimeout(corte);
-        if(intento < 3) setTimeout(function(){ enviar(intento + 1); }, 2000 * intento);
+        var espera = ESPERAS[intento - 1];
+        if(espera) setTimeout(function(){ enviar(intento + 1); },
+                              Math.round(espera * (0.8 + Math.random() * 0.5)));
         else avisar("error");
       }
       fetch(RSVP, opciones)
