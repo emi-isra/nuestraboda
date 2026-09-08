@@ -18,6 +18,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-title" content="Emilia &amp; Israel">
 
+<meta name="format-detection" content="telephone=no,date=no,address=no,email=no">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&family=Pinyon+Script&display=swap">
 <style>
 :root{
@@ -219,9 +220,27 @@ section > :not(.deco){position:relative;z-index:1}
 .cta-bank{background:var(--paper);border:1px solid var(--sand-2);border-radius:var(--r-md);
           padding:20px 18px;text-align:left;box-shadow:var(--sombra)}
 .cta-bank h4{margin:0 0 10px;font-family:var(--display);font-size:19px;font-weight:500;color:var(--cocoa)}
-.cta-bank dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:12.5px}
+.cta-bank dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12.5px;
+              align-items:center}
 .cta-bank dt{color:var(--muted);letter-spacing:.04em}
 .cta-bank dd{margin:0;color:var(--ink);font-variant-numeric:tabular-nums;text-align:right}
+/* algunos navegadores (Safari en el iPhone sobre todo) convierten solos los numeros
+   largos en enlaces de telefono y los pintan de azul: esto los devuelve al color del texto */
+.cta-bank dd a{color:inherit!important;text-decoration:none!important;pointer-events:none}
+.cta-bank dd.copiable{display:flex;align-items:center;justify-content:flex-end;gap:9px}
+.cta-bank dd .num{letter-spacing:.02em}
+.copiar{flex:0 0 auto;width:25px;height:25px;display:inline-flex;align-items:center;
+        justify-content:center;padding:0;border:1px solid var(--sand-2);border-radius:9px;
+        background:var(--cream);color:var(--muted);cursor:pointer;transition:.2s ease;
+        -webkit-appearance:none;appearance:none;-webkit-tap-highlight-color:transparent}
+.copiar:hover{border-color:var(--terra);color:var(--terra);background:var(--linen)}
+.copiar svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.7;
+            stroke-linecap:round;stroke-linejoin:round;display:block}
+.copiar .listo{display:none}
+.copiar.ok{border-color:var(--olive);color:var(--olive);background:#EFF2E7}
+.copiar.ok .icono{display:none}
+.copiar.ok .listo{display:block}
+.cta-pista{margin-top:2px;font-size:10.5px;letter-spacing:.06em;color:var(--muted);text-align:center}
 
 /* ---------- rsvp ---------- */
 .rsvp-caja{background:var(--paper);border:1px solid var(--sand-2);border-radius:var(--r-lg);
@@ -483,13 +502,14 @@ textarea{resize:vertical;min-height:70px}
       <div class="cta-bank">
         <h4>Emilia Rosero</h4>
         <dl><dt>Banco</dt><dd>Pichincha</dd><dt>Tipo</dt><dd>Ahorros</dd>
-            <dt>Cuenta</dt><dd>2207727745</dd><dt>Cédula</dt><dd>1718178021</dd></dl>
+            <dt>Cuenta</dt><dd class="copiable"><span class="num">2207727745</span><button class="copiar" type="button" data-copiar="2207727745" data-etiqueta="Copiar la cuenta de Emilia" aria-label="Copiar la cuenta de Emilia" title="Copiar la cuenta de Emilia"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11.5" height="11.5" rx="2.6"/><path d="M15.4 6.4V5.6A2.6 2.6 0 0 0 12.8 3H6.1A2.6 2.6 0 0 0 3.5 5.6v6.7A2.6 2.6 0 0 0 6.1 14.9h.9"/></svg><svg class="listo" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.8 12.6l4.9 4.9L19.4 6.6"/></svg></button></dd><dt>Cédula</dt><dd class="copiable"><span class="num">1718178021</span><button class="copiar" type="button" data-copiar="1718178021" data-etiqueta="Copiar la cédula de Emilia" aria-label="Copiar la cédula de Emilia" title="Copiar la cédula de Emilia"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11.5" height="11.5" rx="2.6"/><path d="M15.4 6.4V5.6A2.6 2.6 0 0 0 12.8 3H6.1A2.6 2.6 0 0 0 3.5 5.6v6.7A2.6 2.6 0 0 0 6.1 14.9h.9"/></svg><svg class="listo" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.8 12.6l4.9 4.9L19.4 6.6"/></svg></button></dd></dl>
       </div>
       <div class="cta-bank">
         <h4>Israel Pazmiño</h4>
         <dl><dt>Banco</dt><dd>Pichincha</dd><dt>Tipo</dt><dd>Ahorros</dd>
-            <dt>Cuenta</dt><dd>2206543652</dd><dt>Cédula</dt><dd>1723000285</dd></dl>
+            <dt>Cuenta</dt><dd class="copiable"><span class="num">2206543652</span><button class="copiar" type="button" data-copiar="2206543652" data-etiqueta="Copiar la cuenta de Israel" aria-label="Copiar la cuenta de Israel" title="Copiar la cuenta de Israel"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11.5" height="11.5" rx="2.6"/><path d="M15.4 6.4V5.6A2.6 2.6 0 0 0 12.8 3H6.1A2.6 2.6 0 0 0 3.5 5.6v6.7A2.6 2.6 0 0 0 6.1 14.9h.9"/></svg><svg class="listo" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.8 12.6l4.9 4.9L19.4 6.6"/></svg></button></dd><dt>Cédula</dt><dd class="copiable"><span class="num">1723000285</span><button class="copiar" type="button" data-copiar="1723000285" data-etiqueta="Copiar la cédula de Israel" aria-label="Copiar la cédula de Israel" title="Copiar la cédula de Israel"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11.5" height="11.5" rx="2.6"/><path d="M15.4 6.4V5.6A2.6 2.6 0 0 0 12.8 3H6.1A2.6 2.6 0 0 0 3.5 5.6v6.7A2.6 2.6 0 0 0 6.1 14.9h.9"/></svg><svg class="listo" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.8 12.6l4.9 4.9L19.4 6.6"/></svg></button></dd></dl>
       </div>
+      <p class="cta-pista">Toca el icono para copiar el número</p>
     </div>
   </section>
 
@@ -715,6 +735,43 @@ textarea{resize:vertical;min-height:70px}
   bCta.addEventListener("click", function(){
     var ab = cajas.classList.toggle("abierto");
     bCta.textContent = ab ? "Ocultar cuentas" : "Ver cuentas";
+  });
+
+  /* ---------- copiar cuenta o cedula ---------- */
+  function copiarTexto(t){
+    if(navigator.clipboard && navigator.clipboard.writeText)
+      return navigator.clipboard.writeText(t);
+    return new Promise(function(bien, mal){
+      var a = document.createElement("textarea");
+      a.value = t; a.setAttribute("readonly","");
+      a.style.position = "fixed"; a.style.top = "-1000px"; a.style.opacity = "0";
+      document.body.appendChild(a);
+      a.select(); a.setSelectionRange(0, t.length);
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch(err) { ok = false; }
+      document.body.removeChild(a);
+      if(ok) bien(); else mal();
+    });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll(".copiar"), function(b){
+    b.addEventListener("click", function(){
+      copiarTexto(b.dataset.copiar).then(function(){
+        b.classList.add("ok");
+        b.setAttribute("aria-label","Copiado");
+        setTimeout(function(){
+          b.classList.remove("ok");
+          b.setAttribute("aria-label", b.dataset.etiqueta);
+        }, 1800);
+      }).catch(function(){
+        /* si el navegador no deja copiar, al menos se deja el numero seleccionado */
+        var n = b.parentNode.querySelector(".num");
+        if(n && window.getSelection && document.createRange){
+          var r = document.createRange(); r.selectNodeContents(n);
+          var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        }
+      });
+      if(b.blur) b.blur();
+    });
   });
 
   /* ---------- panel demo ---------- */
